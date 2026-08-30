@@ -12,14 +12,20 @@ from .models import (
     Notification,
 )
 from .routers.users import router as users_router
+from .routers.refrigerators import router as refrigerators_router
+from .routers.inventory import router as inventory_router
 
 app = FastAPI(
     title="FreshKeeper API",
     description="Backend API for the FreshKeeper household food inventory system",
     version="1.0.0"
 )
-app.include_router(users_router)
 Base.metadata.create_all(bind=engine)
+
+app.include_router(users_router)
+app.include_router(refrigerators_router)
+app.include_router(inventory_router)
+
 
 @app.get("/")
 def root():
