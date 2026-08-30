@@ -1,0 +1,134 @@
+.add-food-layout {
+  max-width: 720px;
+}
+
+.add-food-section {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.add-food-section-title {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.add-food-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.add-food-actions {
+  display: flex;
+  gap: 0.875rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* Homemade toggle */
+.homemade-toggle {
+  background: var(--cream);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.125rem;
+  margin-bottom: 1.25rem;
+}
+
+.homemade-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 1rem;
+}
+
+.homemade-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.homemade-toggle-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--charcoal);
+}
+
+.homemade-toggle-desc {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: block;
+  position: relative;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: var(--transition);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--orange);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Calculated expiry */
+.calculated-expiry {
+  padding: 0.75rem 1rem;
+  background: var(--green-pale);
+  border: 1.5px solid #86EFAC;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .add-food-grid { grid-template-columns: 1fr; }
+  .add-food-actions { flex-direction: column-reverse; }
+}

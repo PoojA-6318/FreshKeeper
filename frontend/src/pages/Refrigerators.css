@@ -1,0 +1,127 @@
+.fridge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.fridge-detail-card {
+  background: var(--card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: var(--transition-slow);
+}
+
+.fridge-detail-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--border);
+}
+
+.fridge-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 1.125rem;
+}
+
+.fridge-detail-icon {
+  font-size: 2rem;
+  width: 52px;
+  height: 52px;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fridge-detail-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.fridge-detail-name {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin: 0 0 0.125rem;
+}
+
+.fridge-detail-type {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.fridge-detail-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.fridge-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.fridge-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+/* Freshness bar */
+.fridge-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 99px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.fridge-bar-segment {
+  border-radius: 99px;
+  transition: flex 0.4s ease;
+}
+
+/* Modal type selector */
+.fridge-type-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fridge-type-option {
+  padding: 0.5rem 0.875rem;
+  border-radius: 99px;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--slate);
+  transition: var(--transition);
+  user-select: none;
+}
+
+.fridge-type-option:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.fridge-type-option.active {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+}
