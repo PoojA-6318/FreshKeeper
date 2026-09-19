@@ -3,8 +3,12 @@ from sqlalchemy.orm import Session
 from ..auth import get_current_user
 from ..database import SessionLocal
 from ..models.household import Household
+from ..models.household_member import HouseholdMember
 from ..models.refrigerator import Refrigerator
-from ..schemas.refrigerator import RefrigeratorCreate, RefrigeratorResponse
+from ..schemas.refrigerator import (
+    RefrigeratorCreate,
+    RefrigeratorResponse,
+)
 
 router = APIRouter(
     prefix="/refrigerators",
@@ -20,6 +24,32 @@ def get_db():
         db.close()
 
 
+def get_household_membership(
+    household_id: int,
+    user_id: int,
+    db: Session
+):
+    return (
+        db.query(HouseholdMember)
+        .filter(
+            HouseholdMember.household_id == household_id,
+            HouseholdMember.user_id == user_id
+        )
+        .first()
+    )
+
+
+def build_refrigerator_response(refrigerator: Refrigerator):
+    return {
+        "refrigerator_id": refrigerator.refrigerator_id,
+        "household_id": refrigerator.household_id,
+        "name": refrigerator.refrigerator_name,
+        "storage_type": refrigerator.storage_type,
+        "location": refrigerator.location,
+        "created_at": refrigerator.created_at,
+    }
+
+
 @router.post(
     "",
     response_model=RefrigeratorResponse,
@@ -30,9 +60,11 @@ def create_refrigerator(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    household = db.query(Household).filter(
-        Household.household_id == refrigerator_data.household_id
-    ).first()
+    household = (
+        db.query(Household)
+        .filter(Household.household_id == refrigerator_data.household_id)
+        .first()
+    )
 
     if not household:
         raise HTTPException(
@@ -40,15 +72,22 @@ def create_refrigerator(
             detail="Household not found"
         )
 
-    if household.created_by != current_user.user_id:
+    membership = get_household_membership(
+        refrigerator_data.household_id,
+        current_user.user_id,
+        db
+    )
+
+    if not membership:
         raise HTTPException(
             status_code=403,
-            detail="You do not have permission to access this household"
+            detail="You are not a member of this household"
         )
 
     refrigerator = Refrigerator(
         household_id=refrigerator_data.household_id,
-        refrigerator_name=refrigerator_data.refrigerator_name,
+        refrigerator_name=refrigerator_data.name,
+        storage_type=refrigerator_data.storage_type,
         location=refrigerator_data.location
     )
 
@@ -56,9 +95,13 @@ def create_refrigerator(
     db.commit()
     db.refresh(refrigerator)
 
-    return refrigerator
+    return build_refrigerator_response(refrigerator)
 
-@router.get("", response_model=list[RefrigeratorResponse])
+
+@router.get(
+    "",
+    response_model=list[RefrigeratorResponse]
+)
 def get_refrigerators(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
@@ -66,16 +109,18 @@ def get_refrigerators(
     refrigerators = (
         db.query(Refrigerator)
         .join(
-            Household,
-            Refrigerator.household_id == Household.household_id
+            HouseholdMember,
+            Refrigerator.household_id == HouseholdMember.household_id
         )
-        .filter(
-            Household.created_by == current_user.user_id
-        )
+        .filter(HouseholdMember.user_id == current_user.user_id)
         .all()
     )
 
-    return refrigerators
+    return [
+        build_refrigerator_response(refrigerator)
+        for refrigerator in refrigerators
+    ]
+
 
 @router.get(
     "/{refrigerator_id}",
@@ -89,12 +134,12 @@ def get_refrigerator(
     refrigerator = (
         db.query(Refrigerator)
         .join(
-            Household,
-            Refrigerator.household_id == Household.household_id
+            HouseholdMember,
+            Refrigerator.household_id == HouseholdMember.household_id
         )
         .filter(
             Refrigerator.refrigerator_id == refrigerator_id,
-            Household.created_by == current_user.user_id
+            HouseholdMember.user_id == current_user.user_id
         )
         .first()
     )
@@ -105,7 +150,8 @@ def get_refrigerator(
             detail="Refrigerator not found"
         )
 
-    return refrigerator
+    return build_refrigerator_response(refrigerator)
+
 
 @router.put(
     "/{refrigerator_id}",
@@ -120,12 +166,12 @@ def update_refrigerator(
     refrigerator = (
         db.query(Refrigerator)
         .join(
-            Household,
-            Refrigerator.household_id == Household.household_id
+            HouseholdMember,
+            Refrigerator.household_id == HouseholdMember.household_id
         )
         .filter(
             Refrigerator.refrigerator_id == refrigerator_id,
-            Household.created_by == current_user.user_id
+            HouseholdMember.user_id == current_user.user_id
         )
         .first()
     )
@@ -136,16 +182,46 @@ def update_refrigerator(
             detail="Refrigerator not found"
         )
 
+    # Verify the user is also a member
+    # of the household they are moving it to.
+    new_household_membership = get_household_membership(
+        refrigerator_data.household_id,
+        current_user.user_id,
+        db
+    )
+
+    if not new_household_membership:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of the target household"
+        )
+
+    target_household = (
+        db.query(Household)
+        .filter(Household.household_id == refrigerator_data.household_id)
+        .first()
+    )
+
+    if not target_household:
+        raise HTTPException(
+            status_code=404,
+            detail="Target household not found"
+        )
+
     refrigerator.household_id = refrigerator_data.household_id
-    refrigerator.refrigerator_name = refrigerator_data.refrigerator_name
+    refrigerator.refrigerator_name = refrigerator_data.name
+    refrigerator.storage_type = refrigerator_data.storage_type
     refrigerator.location = refrigerator_data.location
 
     db.commit()
     db.refresh(refrigerator)
 
-    return refrigerator
+    return build_refrigerator_response(refrigerator)
 
-@router.delete("/{refrigerator_id}")
+
+@router.delete(
+    "/{refrigerator_id}"
+)
 def delete_refrigerator(
     refrigerator_id: int,
     db: Session = Depends(get_db),
@@ -154,12 +230,13 @@ def delete_refrigerator(
     refrigerator = (
         db.query(Refrigerator)
         .join(
-            Household,
-            Refrigerator.household_id == Household.household_id
+            HouseholdMember,
+            Refrigerator.household_id ==
+            HouseholdMember.household_id
         )
         .filter(
             Refrigerator.refrigerator_id == refrigerator_id,
-            Household.created_by == current_user.user_id
+            HouseholdMember.user_id == current_user.user_id
         )
         .first()
     )

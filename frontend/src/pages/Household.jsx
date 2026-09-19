@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, UserPlus, Crown, UserRound, Trash2 } from 'lucide-react';
 import { householdsAPI } from '../services/api';
+import {  } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Loading from '../components/Loading';
 import toast from 'react-hot-toast';
@@ -138,11 +139,11 @@ export default function Household() {
               {(household.members || []).map(member => (
                 <div key={member.membership_id} className="member-item">
                   <div className="member-avatar">
-                    {member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                    {member.user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                   </div>
                   <div className="member-info">
                     <p className="member-name">
-                      {member.user?.name || 'Unknown'}
+                      {member.user?.full_name || 'Unknown'}
                       {member.user?.user_id === user?.user_id && <span className="member-you-tag">You</span>}
                     </p>
                     <p className="member-email">{member.user?.email}</p>
@@ -156,7 +157,7 @@ export default function Household() {
                     {household.my_role === 'OWNER' && member.role !== 'OWNER' && (
                       <button
                         className="btn btn-ghost btn-icon btn-sm"
-                        onClick={() => removeMember(member.membership_id, member.user?.name)}
+                        onClick={() => removeMember(member.membership_id, member.user?.full_name)}
                         id={`btn-remove-member-${member.membership_id}`}
                         title="Remove member"
                       >

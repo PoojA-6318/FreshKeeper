@@ -6,7 +6,8 @@ from ..models.inventory import Inventory
 from ..models.refrigerator import Refrigerator
 from ..schemas.inventory import InventoryCreate, InventoryResponse
 from ..models.household import Household
-from datetime import date, timedelta
+from ..models.consumption_history import ConsumptionHistory
+from datetime import date, datetime, timedelta
 
 router = APIRouter(
     prefix="/inventory",
@@ -94,12 +95,112 @@ def get_inventory_items(
             == Household.household_id
         )
         .filter(
-            Household.created_by == current_user.user_id
+            Household.created_by == current_user.user_id,
+            Inventory.status == "active"
         )
         .all()
     )
 
     return inventory_items
+
+@router.post("/{item_id}/consume")
+def consume_inventory_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    inventory_item = (
+        db.query(Inventory)
+        .join(
+            Refrigerator,
+            Inventory.refrigerator_id == Refrigerator.refrigerator_id
+        )
+        .join(
+            Household,
+            Refrigerator.household_id == Household.household_id
+        )
+        .filter(
+            Inventory.item_id == item_id,
+            Household.created_by == current_user.user_id,
+            Inventory.status == "active"
+        )
+        .first()
+    )
+
+    if not inventory_item:
+        raise HTTPException(
+            status_code=404,
+            detail="Active inventory item not found"
+        )
+
+    history = ConsumptionHistory(
+        item_id=inventory_item.item_id,
+        user_id=current_user.user_id,
+        action="consumed",
+        action_date=datetime.utcnow(),
+        estimated_cost=inventory_item.estimated_price
+    )
+
+    inventory_item.status = "consumed"
+
+    db.add(history)
+    db.commit()
+
+    return {
+        "message": "Inventory item marked as consumed",
+        "item_id": inventory_item.item_id,
+        "status": inventory_item.status
+    }
+
+@router.post("/{item_id}/discard")
+def discard_inventory_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    inventory_item = (
+        db.query(Inventory)
+        .join(
+            Refrigerator,
+            Inventory.refrigerator_id == Refrigerator.refrigerator_id
+        )
+        .join(
+            Household,
+            Refrigerator.household_id == Household.household_id
+        )
+        .filter(
+            Inventory.item_id == item_id,
+            Household.created_by == current_user.user_id,
+            Inventory.status == "active"
+        )
+        .first()
+    )
+
+    if not inventory_item:
+        raise HTTPException(
+            status_code=404,
+            detail="Active inventory item not found"
+        )
+
+    history = ConsumptionHistory(
+        item_id=inventory_item.item_id,
+        user_id=current_user.user_id,
+        action="discarded",
+        action_date=datetime.utcnow(),
+        estimated_cost=inventory_item.estimated_price
+    )
+
+    inventory_item.status = "discarded"
+
+    db.add(history)
+    db.commit()
+
+    return {
+        "message": "Inventory item marked as discarded",
+        "item_id": inventory_item.item_id,
+        "status": inventory_item.status
+    }
+
 
 @router.get(
     "/{item_id}",
@@ -269,7 +370,8 @@ def search_inventory(
         )
         .filter(
             Household.created_by == current_user.user_id,
-            Inventory.item_name.ilike(f"%{item_name}%")
+            Inventory.item_name.ilike(f"%{item_name}%"),
+            Inventory.status == "active"
         )
         .all()
     )
@@ -299,7 +401,8 @@ def get_inventory_by_category(
         )
         .filter(
             Household.created_by == current_user.user_id,
-            Inventory.category.ilike(category)
+            Inventory.category.ilike(category),
+            Inventory.status == "active"
         )
         .all()
     )
@@ -328,7 +431,8 @@ def get_low_stock_items(
         )
         .filter(
             Household.created_by == current_user.user_id,
-            Inventory.quantity <= 1
+            Inventory.quantity <= 1,
+            Inventory.status == "active"
         )
         .all()
     )
@@ -353,7 +457,8 @@ def get_refrigerator_inventory(
         )
         .filter(
             Refrigerator.refrigerator_id == refrigerator_id,
-            Household.created_by == current_user.user_id
+            Household.created_by == current_user.user_id,
+            Inventory.status == "active"
         )
         .first()
     )
@@ -393,7 +498,8 @@ def get_expired_items(
         .filter(
             Household.created_by == current_user.user_id,
             Inventory.expiry_date.isnot(None),
-            Inventory.expiry_date < date.today()
+            Inventory.expiry_date < date.today(),
+            Inventory.status == "active"
         )
         .all()
     )
@@ -425,7 +531,8 @@ def get_expiring_soon_items(
             Household.created_by == current_user.user_id,
             Inventory.expiry_date.isnot(None),
             Inventory.expiry_date >= today,
-            Inventory.expiry_date <= upcoming_date
+            Inventory.expiry_date <= upcoming_date,
+            Inventory.status == "active"
         )
         .all()
     )

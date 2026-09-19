@@ -15,6 +15,7 @@ from .models import (
 from .routers.users import router as users_router
 from .routers.refrigerators import router as refrigerators_router
 from .routers.inventory import router as inventory_router
+from .routers.household import router as household_router
 
 app = FastAPI(
     title="FreshKeeper API",
@@ -36,6 +37,7 @@ app.add_middleware(
 app.include_router(users_router)
 app.include_router(refrigerators_router)
 app.include_router(inventory_router)
+app.include_router(household_router)
 
 
 @app.get("/")

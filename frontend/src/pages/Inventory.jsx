@@ -69,9 +69,9 @@ export default function Inventory() {
 
   const filtered = useMemo(() => {
     return inventory.filter(item => {
-      const matchSearch = item.name?.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = item.item_name?.toLowerCase().includes(search.toLowerCase());
       const matchCategory = categoryFilter === 'all' ||
-        CATEGORIES.find(c => c.id === categoryFilter)?.label === item.item_type?.name;
+        CATEGORIES.find(c => c.id === categoryFilter)?.label === item.item_type?.item_name;
       const matchExpiry = expiryFilter === 'all' || getExpiryStatus(item.expiry_date) === expiryFilter;
       return matchSearch && matchCategory && matchExpiry;
     });
@@ -184,7 +184,7 @@ export default function Inventory() {
         <div className="inventory-grid">
           {filtered.map(item => (
             <FoodCard
-              key={item.inventory_id}
+              key={item.item_id}
               item={item}
               onConsume={handleConsume}
               onDiscard={handleDiscard}

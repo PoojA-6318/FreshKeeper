@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Package } from 'lucide-react';
-import { refrigeratorsAPI, inventoryAPI } from '../services/api';
+import { refrigeratorsAPI, inventoryAPI, householdsAPI } from '../services/api';
 import { getExpiryStatus } from '../utils/dateUtils';
 import Loading from '../components/Loading';
 import toast from 'react-hot-toast';
@@ -23,23 +23,47 @@ export default function Refrigerators() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [household, setHousehold] = useState(null);
 
   const load = async () => {
     try {
-      const [fridgeRes, invRes] = await Promise.allSettled([
+      const [householdRes, fridgeRes, invRes] = await Promise.allSettled([
+        householdsAPI.list(),
         refrigeratorsAPI.list(),
         inventoryAPI.list(),
       ]);
-      if (fridgeRes.status === 'fulfilled') setFridges(fridgeRes.value.data || []);
-      if (invRes.status === 'fulfilled') setInventory(invRes.value.data || []);
-    } catch {}
-    finally { setLoading(false); }
+
+      if (householdRes.status === 'fulfilled') {
+        const households = householdRes.value.data || [];
+        setHousehold(households[0] || null);
+      }
+
+      if (fridgeRes.status === 'fulfilled') {
+        setFridges(fridgeRes.value.data || []);
+      }
+
+      if (invRes.status === 'fulfilled') {
+        setInventory(invRes.value.data || []);
+      }
+    } catch {
+      // Individual requests are handled separately.
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setEditTarget(null); setForm(EMPTY_FORM); setErrors({}); setShowModal(true); };
-  const openEdit = (fridge) => { setEditTarget(fridge); setForm({ name: fridge.name, storage_type: fridge.storage_type }); setErrors({}); setShowModal(true); };
+  const openEdit = (fridge) => {
+    setEditTarget(fridge);
+    setForm({
+      name: fridge.name,
+      storage_type: fridge.storage_type,
+    });
+    setErrors({});
+    setShowModal(true);
+  };
   const closeModal = () => setShowModal(false);
 
   const validate = () => {
@@ -55,10 +79,18 @@ export default function Refrigerators() {
     setSaving(true);
     try {
       if (editTarget) {
-        await refrigeratorsAPI.update(editTarget.refrigerator_id, form);
+        await refrigeratorsAPI.update(editTarget.refrigerator_id, {
+          household_id: household.household_id,
+          name: form.name,
+          storage_type: form.storage_type,
+        });
         toast.success('Refrigerator updated!');
       } else {
-        await refrigeratorsAPI.create(form);
+        await refrigeratorsAPI.create({
+          household_id: household.household_id,
+          name: form.name,
+          storage_type: form.storage_type,
+        });
         toast.success('Refrigerator added! 🧊');
       }
       closeModal();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
-import { inventoryAPI, refrigeratorsAPI, itemTypesAPI } from '../services/api';
+import { inventoryAPI, refrigeratorsAPI } from '../services/api';
 import { CATEGORIES, UNITS, STORAGE_TYPES } from '../utils/constants';
 import toast from 'react-hot-toast';
 import './AddFood.css';
@@ -18,7 +18,7 @@ export default function AddFood({ editMode = false }) {
     cooked_date: '', shelf_life_days: '',
   });
   const [fridges, setFridges] = useState([]);
-  const [itemTypes, setItemTypes] = useState([]);
+  const [itemTypes, setItemTypes] = useState(CATEGORIES);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(editMode);
@@ -26,19 +26,21 @@ export default function AddFood({ editMode = false }) {
   useEffect(() => {
     const init = async () => {
       try {
-        const [fridgeRes, typesRes] = await Promise.allSettled([
-          refrigeratorsAPI.list(),
-          itemTypesAPI.list(),
-        ]);
-        if (fridgeRes.status === 'fulfilled') setFridges(fridgeRes.value.data || []);
-        if (typesRes.status === 'fulfilled') setItemTypes(typesRes.value.data || CATEGORIES.map((c,i) => ({ item_type_id: i+1, name: c.label })));
+        const fridgeRes = await refrigeratorsAPI.list();
+
+        if (fridgeRes.status === 200) {
+          setFridges(fridgeRes.data || []);
+        }
+
+        setItemTypes(CATEGORIES);
 
         if (editMode && id) {
           const res = await inventoryAPI.get(id);
           const item = res.data;
+
           setForm({
-            name: item.name || '',
-            item_type_id: item.item_type_id || '',
+            name: item.item_name || '',
+            item_type_id: item.category || '',
             quantity: item.quantity || '',
             unit: item.unit || 'pcs',
             refrigerator_id: item.refrigerator_id || '',
@@ -51,8 +53,11 @@ export default function AddFood({ editMode = false }) {
             shelf_life_days: item.shelf_life_days || '',
           });
         }
-      } catch {}
-      finally { setPageLoading(false); }
+      } catch (err) {
+        console.error('Failed to load Add Food data:', err);
+      } finally {
+        setPageLoading(false);
+      }
     };
     init();
   }, [editMode, id]);
@@ -79,15 +84,51 @@ export default function AddFood({ editMode = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setLoading(true);
 
-    const payload = { ...form, quantity: Number(form.quantity) };
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
+    setLoading(true);
+    let expiryDate = form.expiry_date;
+
+    // Calculate expiry for homemade meals
     if (form.is_homemade && form.cooked_date && form.shelf_life_days) {
       const cooked = new Date(form.cooked_date);
       cooked.setDate(cooked.getDate() + Number(form.shelf_life_days));
-      payload.expiry_date = cooked.toISOString().split('T')[0];
+      expiryDate = cooked.toISOString().split('T')[0];
     }
+
+    // Find the selected category from the frontend category list
+    const selectedCategory = CATEGORIES.find(
+      category => String(category.id) === String(form.item_type_id)
+    );
+
+    const payload = {
+      refrigerator_id: Number(form.refrigerator_id),
+      item_name: form.name.trim(),
+      // Keep the backend fields consistent
+      item_type: selectedCategory?.label || form.item_type_id,
+      category: selectedCategory?.label || form.item_type_id,
+      unit: form.unit,
+      quantity: Number(form.quantity),
+      date_added: form.date_added,
+      expiry_date: expiryDate || null,
+      is_homemade: form.is_homemade,
+      cooked_date: form.is_homemade
+        ? form.cooked_date || null
+        : null,
+
+      shelf_life_days: form.is_homemade
+        ? Number(form.shelf_life_days)
+        : null,
+
+      storage_information: form.storage_information.trim() || null,
+      notes: form.notes.trim() || null,
+    };
+
+    console.log('Inventory payload:', payload);
 
     try {
       if (editMode) {
@@ -97,9 +138,30 @@ export default function AddFood({ editMode = false }) {
         await inventoryAPI.create(payload);
         toast.success('Food item added! 🥗');
       }
+
       navigate('/inventory');
+
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to save item');
+      console.error('Inventory save error:', err.response?.data || err);
+      const detail = err.response?.data?.detail;
+
+      if (Array.isArray(detail)) {
+        const message = detail
+          .map(error => {
+            const field = Array.isArray(error.loc)
+              ? error.loc[error.loc.length - 1]
+              : 'field';
+
+            return `${field}: ${error.msg}`;
+          })
+          .join('\n');
+
+        toast.error(message);
+      } else {
+        toast.error(
+          detail || 'Failed to save item'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -145,12 +207,13 @@ export default function AddFood({ editMode = false }) {
                   id="food-category"
                   className={`form-input form-select ${errors.item_type_id ? 'input-error' : ''}`}
                   value={form.item_type_id}
-                  onChange={e => set('item_type_id', e.target.value)}
+                  onChange={(e) => set('item_type_id', e.target.value)}
                 >
                   <option value="">Select category</option>
-                  {itemTypes.map(t => (
-                    <option key={t.item_type_id} value={t.item_type_id}>
-                      {CATEGORIES.find(c => c.label === t.name)?.emoji || '📦'} {t.name}
+
+                  {CATEGORIES.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.emoji} {category.label}
                     </option>
                   ))}
                 </select>

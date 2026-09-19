@@ -17,9 +17,9 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
   const isUrgent = expiryStatus === 'today' || expiryStatus === 'soon';
 
   const handleConfirm = () => {
-    if (confirmType === 'consume') onConsume?.(item.inventory_id);
-    if (confirmType === 'discard') onDiscard?.(item.inventory_id);
-    if (confirmType === 'delete') onDelete?.(item.inventory_id);
+    if (confirmType === 'consume') onConsume?.(item.item_id);
+    if (confirmType === 'discard') onDiscard?.(item.item_id);
+    if (confirmType === 'delete') onDelete?.(item.item_id);
     setConfirmType(null);
   };
 
@@ -36,8 +36,8 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
         </div>
         <button
           className="btn btn-ghost btn-icon btn-sm"
-          onClick={() => navigate(`/inventory/edit/${item.inventory_id}`)}
-          id={`btn-edit-food-${item.inventory_id}`}
+          onClick={() => navigate(`/inventory/edit/${item.item_id}`)}
+          id={`btn-edit-food-${item.item_id}`}
           title="Edit"
         >
           <Pencil size={14} />
@@ -74,10 +74,10 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
             {confirmType === 'delete' && '⚠️ Delete permanently?'}
           </p>
           <div className="flex gap-2">
-            <button className="btn btn-sm btn-secondary" onClick={() => setConfirmType(null)} id={`btn-cancel-confirm-${item.inventory_id}`}>
+            <button className="btn btn-sm btn-secondary" onClick={() => setConfirmType(null)} id={`btn-cancel-confirm-${item.item_id}`}>
               Cancel
             </button>
-            <button className="btn btn-sm btn-primary" onClick={handleConfirm} id={`btn-confirm-action-${item.inventory_id}`}>
+            <button className="btn btn-sm btn-primary" onClick={handleConfirm} id={`btn-confirm-action-${item.item_id}`}>
               Yes, confirm
             </button>
           </div>
@@ -87,21 +87,21 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
           <button
             className="btn btn-sm btn-green"
             onClick={() => setConfirmType('consume')}
-            id={`btn-consume-${item.inventory_id}`}
+            id={`btn-consume-${item.item_id}`}
           >
             <UtensilsCrossed size={13} /> Consume
           </button>
           <button
             className="btn btn-sm btn-secondary"
             onClick={() => setConfirmType('discard')}
-            id={`btn-discard-${item.inventory_id}`}
+            id={`btn-discard-${item.item_id}`}
           >
             <PackageX size={13} /> Discard
           </button>
           <button
             className="btn btn-sm btn-danger btn-icon"
             onClick={() => setConfirmType('delete')}
-            id={`btn-delete-${item.inventory_id}`}
+            id={`btn-delete-${item.item_id}`}
             title="Delete"
           >
             <Trash2 size={13} />

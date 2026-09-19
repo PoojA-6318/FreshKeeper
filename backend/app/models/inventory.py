@@ -1,8 +1,7 @@
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Date, ForeignKey, Integer, Numeric, String, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from ..database import Base
 
 
@@ -65,6 +64,22 @@ class Inventory(Base):
         nullable=True
     )
 
+    is_homemade: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
+    )
+
+    cooked_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True
+    )
+
+    shelf_life_days: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+
     image_url: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True
@@ -77,6 +92,17 @@ class Inventory(Base):
 
     notes: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="active"
+    )
+
+    storage_information: Mapped[str | None] = mapped_column(
+        String(500),
         nullable=True
     )
 

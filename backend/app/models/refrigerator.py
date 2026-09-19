@@ -25,6 +25,12 @@ class Refrigerator(Base):
         nullable=False
     )
 
+    storage_type: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="refrigerator"
+    )
+
     location: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True
