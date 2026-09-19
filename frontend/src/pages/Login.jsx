@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Leaf, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../services/api';
+import { authAPI, getAPIError } from '../services/api';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -25,16 +25,25 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
     setLoading(true);
+
     try {
       const res = await authAPI.login(form);
-      login(res.data.user, res.data.access_token);
-      toast.success(`Welcome back, ${res.data.user.name}! 👋`);
+      const token = res.data.access_token;
+      localStorage.setItem('fk_token', token);
+      const meRes = await authAPI.me();
+      login(meRes.data, token);
+      toast.success('Welcome back! 👋');
+
       navigate('/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Login failed. Check your credentials.';
-      toast.error(msg);
+      toast.error(getAPIError(err));
     } finally {
       setLoading(false);
     }

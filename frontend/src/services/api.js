@@ -7,6 +7,19 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export const getAPIError = (err) => {
+  const detail = err.response?.data?.detail;
+  if (Array.isArray(detail)) {
+    return detail.map((error) => error.msg).join(', ');
+  }
+
+  if (typeof detail === 'string') {
+    return detail;
+  }
+
+  return err.response?.data?.message || 'Something went wrong.';
+};
+
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('fk_token');
@@ -29,9 +42,9 @@ api.interceptors.response.use(
 
 /* ── Auth ── */
 export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  logout: () => api.post('/auth/logout'),
+  register: (data) => api.post('/users/register', data),
+  login: (data) => api.post('/users/login', data),
+  //logout: () => api.post('/auth/logout'),
   me: () => api.get('/users/me'),
 };
 

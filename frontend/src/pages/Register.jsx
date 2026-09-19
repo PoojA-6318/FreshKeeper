@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import './Auth.css';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ full_name: '', email: '', phone_no: '', password: '', confirmPassword: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -16,7 +16,7 @@ export default function Register() {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim()) errs.name = 'Name is required';
+    if (!form.full_name.trim()) errs.full_name = 'Name is required';
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email';
     if (!form.password) errs.password = 'Password is required';
@@ -27,22 +27,39 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
     setLoading(true);
+
     try {
       const { confirmPassword, ...payload } = form;
-      const res = await authAPI.register(payload);
-      login(res.data.user, res.data.access_token);
-      toast.success('Account created! Welcome to FreshKeeper 🎉');
-      navigate('/dashboard');
-    } catch (err) {
-      const msg = err.response?.data?.detail || 'Registration failed. Please try again.';
+      await authAPI.register(payload);
+      toast.success('Account created successfully! Please sign in.');
+      navigate('/login');
+    } 
+    catch (err) {
+      const detail = err.response?.data?.detail;
+      let msg = 'Registration failed. Please try again.';
+
+      if (Array.isArray(detail)) {
+        msg = detail.map((error) => error.msg).join(', ');
+      } else if (typeof detail === 'string') {
+        msg = detail;
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
       toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
 
   const field = (key, updates) => {
     setForm(p => ({...p, [key]: updates}));
@@ -100,14 +117,14 @@ export default function Register() {
                 <input
                   id="reg-name"
                   type="text"
-                  className={`form-input ${errors.name ? 'input-error' : ''}`}
+                  className={`form-input ${errors.full_name ? 'input-error' : ''}`}
                   placeholder="Pooja Sharma"
-                  value={form.name}
-                  onChange={e => field('name', e.target.value)}
+                  value={form.full_name}
+                  onChange={e => field('full_name', e.target.value)}
                   autoComplete="name"
                 />
               </div>
-              {errors.name && <p className="form-error">{errors.name}</p>}
+              {errors.full_name && <p className="form-error">{errors.full_name}</p>}
             </div>
 
             <div className="form-group">
@@ -125,6 +142,32 @@ export default function Register() {
                 />
               </div>
               {errors.email && <p className="form-error">{errors.email}</p>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-contact">
+                Contact number
+              </label>
+
+              <div className="input-icon-wrapper">
+                <User size={16} className="input-icon" />
+
+                <input
+                  id="reg-contact"
+                  type="tel"
+                  className={`form-input ${
+                    errors.phone_no ? 'input-error' : ''
+                  }`}
+                  placeholder="9876543210"
+                  value={form.phone_no}
+                  onChange={e => field('phone_no', e.target.value)}
+                  autoComplete="tel"
+                />
+              </div>
+
+              {errors.phone_no && (
+                <p className="form-error">{errors.phone_no}</p>
+              )}
             </div>
 
             <div className="form-group">
