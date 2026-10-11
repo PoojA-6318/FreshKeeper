@@ -230,7 +230,7 @@ export default function AddFood({ editMode = false }) {
                 >
                   <option value="">Select refrigerator</option>
                   {fridges.map(f => (
-                    <option key={f.refrigerator_id} value={f.refrigerator_id}>{f.name}</option>
+                    <option key={f.refrigerator_id} value={f.refrigerator_id}>{f.refrigerator_name || f.name}</option>
                   ))}
                 </select>
                 {errors.refrigerator_id && <p className="form-error">{errors.refrigerator_id}</p>}

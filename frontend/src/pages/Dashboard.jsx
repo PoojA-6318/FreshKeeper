@@ -165,11 +165,12 @@ export default function Dashboard() {
           ) : (
             <div className="fridge-list">
               {fridges.map(fridge => {
-                const count = inventory.filter(i => i.refrigerator?.refrigerator_id === fridge.refrigerator_id).length;
-                const expired = inventory.filter(i =>
-                  i.refrigerator?.refrigerator_id === fridge.refrigerator_id &&
-                  getExpiryStatus(i.expiry_date) === 'expired'
-                ).length;
+                const fridgeItems = inventory.filter(
+                  (i) => Number(i.refrigerator_id) === Number(fridge.refrigerator_id)
+                );
+                const count = fridgeItems.length;
+                const expired = fridgeItems.filter(
+                  (i) => getExpiryStatus(i.expiry_date) === 'expired').length;
                 return (
                   <div key={fridge.refrigerator_id} className="fridge-card">
                     <div className="fridge-card-icon">

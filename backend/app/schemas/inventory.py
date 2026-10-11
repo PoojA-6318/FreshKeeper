@@ -78,6 +78,7 @@ class InventoryCreate(BaseModel):
 class InventoryResponse(BaseModel):
     item_id: int
     refrigerator_id: int
+    refrigerator_name : str
     added_by: int
     item_name: str
     item_type: str | None

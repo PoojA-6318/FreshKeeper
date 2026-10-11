@@ -22,6 +22,30 @@ def get_db():
     finally:
         db.close()
 
+def inventory_to_response(item: Inventory) -> dict:
+    return {
+        "item_id": item.item_id,
+        "refrigerator_id": item.refrigerator_id,
+        "refrigerator_name": item.refrigerator.refrigerator_name,
+        "added_by": item.added_by,
+        "item_name": item.item_name,
+        "item_type": item.item_type,
+        "category": item.category,
+        "unit": item.unit,
+        "quantity": item.quantity,
+        "storage_type": item.storage_type,
+        "date_added": item.date_added,
+        "expiry_date": item.expiry_date,
+        "is_homemade": item.is_homemade,
+        "cooked_date": item.cooked_date,
+        "shelf_life_days": item.shelf_life_days,
+        "storage_information": item.storage_information,
+        "image_url": item.image_url,
+        "estimated_price": item.estimated_price,
+        "notes": item.notes,
+        "status": item.status,
+    }
+
 
 @router.post(
     "",
@@ -72,7 +96,7 @@ def create_inventory_item(
     db.commit()
     db.refresh(inventory_item)
 
-    return inventory_item
+    return inventory_to_response(inventory_item)
 
 @router.get(
     "",
@@ -101,7 +125,7 @@ def get_inventory_items(
         .all()
     )
 
-    return inventory_items
+    return [inventory_to_response(item) for item in inventory_items]
 
 @router.post("/{item_id}/consume")
 def consume_inventory_item(

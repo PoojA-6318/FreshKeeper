@@ -10,11 +10,30 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
   const [confirmType, setConfirmType] = useState(null); // 'consume' | 'discard' | 'delete'
   const navigate = useNavigate();
 
-  const category = CATEGORIES.find(c => c.id === item.item_type?.id || c.label === item.item_type?.name);
-  const emoji = category?.emoji || '📦';
-  const expiryStatus = getExpiryStatus(item.expiry_date);
-  const isExpired = expiryStatus === 'expired';
-  const isUrgent = expiryStatus === 'today' || expiryStatus === 'soon';
+const itemName = item.item_name || item.name || 'Unnamed Food';
+
+const refrigeratorName =
+  item.refrigerator_name ||
+  'Unknown Storage';
+
+const categoryName =
+  typeof item.category === 'string'
+    ? item.category
+    : typeof item.item_type === 'string'
+      ? item.item_type
+      : item.item_type?.name || '';
+
+const category = CATEGORIES.find(
+  (c) =>
+    String(c.id) === String(item.item_type_id) ||
+    c.label.toLowerCase() === categoryName.toLowerCase()
+);
+
+const emoji = category?.emoji || '📦';
+
+const expiryStatus = getExpiryStatus(item.expiry_date);
+const isExpired = expiryStatus === 'expired';
+const isUrgent = expiryStatus === 'today' || expiryStatus === 'soon';
 
   const handleConfirm = () => {
     if (confirmType === 'consume') onConsume?.(item.item_id);
@@ -29,9 +48,9 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
       <div className="food-card__header">
         <div className="food-card__emoji">{emoji}</div>
         <div className="food-card__meta">
-          <h4 className="food-card__name">{item.name}</h4>
+          <h4 className="food-card__name">{itemName}</h4>
           <p className="food-card__location">
-            📍 {item.refrigerator?.name || 'Unknown Storage'}
+            📍 {refrigeratorName}
           </p>
         </div>
         <button
@@ -52,7 +71,7 @@ export default function FoodCard({ item, onConsume, onDiscard, onDelete }) {
         </div>
         <div className="food-card__detail">
           <span className="food-card__detail-label">Category</span>
-          <span className="food-card__detail-value">{category?.label || item.item_type?.name || '—'}</span>
+          <span className="food-card__detail-value">{category?.label || categoryName || '—'}</span>
         </div>
       </div>
 

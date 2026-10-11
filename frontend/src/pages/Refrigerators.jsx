@@ -112,12 +112,18 @@ export default function Refrigerators() {
   };
 
   const fridgeStats = (fridgeId) => {
-    const items = inventory.filter(i => i.refrigerator?.refrigerator_id === fridgeId);
+    const items = inventory.filter(
+      (i) => Number(i.refrigerator_id) === Number(fridgeId)
+    );
+
     return {
       total: items.length,
-      expired: items.filter(i => getExpiryStatus(i.expiry_date) === 'expired').length,
-      soon: items.filter(i => ['soon', 'today'].includes(getExpiryStatus(i.expiry_date))).length,
-      fresh: items.filter(i => getExpiryStatus(i.expiry_date) === 'normal').length,
+      expired: items.filter(
+        (i) => getExpiryStatus(i.expiry_date) === 'expired').length,
+      soon: items.filter(
+        (i) => ['soon', 'today'].includes(getExpiryStatus(i.expiry_date))).length,
+      fresh: items.filter(
+        (i) => getExpiryStatus(i.expiry_date) === 'normal').length,
     };
   };
 

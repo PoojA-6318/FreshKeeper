@@ -15,6 +15,7 @@ class RefrigeratorCreate(BaseModel):
 
 class RefrigeratorResponse(BaseModel):
     refrigerator_id: int
+    #refrigerator_name: str
     household_id: int
     name: str
     storage_type: str
