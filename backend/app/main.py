@@ -17,6 +17,8 @@ from .routers.refrigerators import router as refrigerators_router
 from .routers.inventory import router as inventory_router
 from .routers.household import router as household_router
 from .routers.notifications import router as notifications_router
+from .routers.analytics import router as analytics_router
+from .routers.shopping_list import router as shopping_list_router
 from contextlib import asynccontextmanager
 from .services.notification_scheduler import start_notification_scheduler, stop_notification_scheduler
 
@@ -51,6 +53,8 @@ app.include_router(refrigerators_router)
 app.include_router(inventory_router)
 app.include_router(household_router)
 app.include_router(notifications_router)
+app.include_router(analytics_router)
+app.include_router(shopping_list_router)
 
 @app.get("/")
 def root():
